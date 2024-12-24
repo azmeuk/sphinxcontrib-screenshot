@@ -11,22 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from io import StringIO
+def create_app(sphinx_app):
 
-import pytest
-from bs4 import BeautifulSoup
-from sphinx.testing.util import SphinxTestApp
+  def hello_world_app(environ, start_response):
+    headers = [('Content-type', 'text/plain; charset=utf-8')]
+    start_response('200 OK', headers)
+    return [31 * ((7 * b'Hello, World! ') + b'\n')]
 
-
-@pytest.mark.sphinx('html', testroot="wsgi-apps")
-def test_default(app: SphinxTestApp, status: StringIO, warning: StringIO,
-                 image_regression) -> None:
-  app.build()
-  out_html = app.outdir / "index.html"
-
-  soup = BeautifulSoup(out_html.read_text(), "html.parser")
-  imgs = soup.find_all('img')
-
-  img_path = app.outdir / imgs[0]['src']
-  with open(img_path, "rb") as fd:
-    image_regression.check(fd.read(), diff_threshold=0)
+  return hello_world_app

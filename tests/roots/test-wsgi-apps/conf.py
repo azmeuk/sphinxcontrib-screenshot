@@ -11,11 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-def hello_world_app(environ, start_response):
-  headers = [('Content-type', 'text/plain; charset=utf-8')]
-  start_response('200 OK', headers)
-  return [b'Hello, World!']
+import pathlib
+import sys
 
+sys.path.insert(0, str(pathlib.Path(__file__).parent.resolve()))
 
 extensions = ['sphinxcontrib.screenshot']
-screenshot_apps = {"example": lambda: hello_world_app}
+screenshot_apps = {"example": "example_app:create_app"}
