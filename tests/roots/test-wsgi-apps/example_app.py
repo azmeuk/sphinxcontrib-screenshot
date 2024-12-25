@@ -14,8 +14,8 @@
 def create_app(sphinx_app):
 
   def hello_world_app(environ, start_response):
-    headers = [('Content-type', 'text/plain; charset=utf-8')]
+    headers = [('Content-type', 'text/html; charset=utf-8')]
     start_response('200 OK', headers)
-    return [31 * ((7 * b'Hello, World! ') + b'\n')]
+    return [b"""<html><body style="font-family: arial; font-size: 10px; margin: 0; padding: 0">Hello, World!</body></html>"""]
 
   return hello_world_app

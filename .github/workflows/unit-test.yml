@@ -24,8 +24,10 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install ".[dev]"
+      - name: Playwright install-deps
+        run: playwright install-deps chromium
       - name: Playwright install
-        run: playwright install
+        run: playwright install chromium
       - name: Run unittest
         run: pytest
       - name: Upload failed image artifact

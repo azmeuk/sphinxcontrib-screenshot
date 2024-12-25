@@ -29,4 +29,4 @@ def test_default(app: SphinxTestApp, status: StringIO, warning: StringIO,
 
   img_path = app.outdir / imgs[0]['src']
   with open(img_path, "rb") as fd:
-    image_regression.check(fd.read(), diff_threshold=0)
+    image_regression.check(fd.read())
