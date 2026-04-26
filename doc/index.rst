@@ -268,6 +268,122 @@ You can specify the screen size for a particular screenshot with :code:`viewport
   :viewport-width: 320
   :viewport-height: 600
 
+Screencasts
+###########
+
+In addition to still screenshots, you can record a short WebM screencast of a
+page using the ``screencast`` directive. The directive shares all the page
+setup options of ``screenshot`` (browser, viewport, locale, timezone,
+headers, context, etc.) and adds HTML5 ``<video>`` attributes.
+
+.. screencast:: https://github.com/tushuhei/sphinxcontrib-screenshot
+    :viewport-width: 800
+    :viewport-height: 400
+    :controls:
+    :muted:
+    :caption: Scrolling the project page.
+
+    window.scrollTo({top: 600, behavior: 'smooth'});
+    await new Promise(r => setTimeout(r, 1500));
+
+.. code-block:: rst
+
+    .. screencast:: https://github.com/tushuhei/sphinxcontrib-screenshot
+        :viewport-width: 800
+        :viewport-height: 400
+        :controls:
+        :muted:
+        :caption: Scrolling the project page.
+
+        window.scrollTo({top: 600, behavior: 'smooth'});
+        await new Promise(r => setTimeout(r, 1500));
+
+The recording covers the load of the page, then the JavaScript interactions
+in the directive body, then closes. There is no separate ``:duration:``
+option: to keep the page busy after a click (e.g. to capture a CSS
+transition), keep awaiting in the JavaScript itself
+(``await new Promise(r => setTimeout(r, ms))``). Playwright awaits the
+returned Promise, so the video covers exactly what the script does.
+
+Video options
+=============
+
+``:loop:``, ``:autoplay:``, ``:muted:``, ``:controls:``
+    HTML5 ``<video>`` boolean attributes. ``:autoplay:`` without ``:muted:``
+    is rejected by most browsers; if you set the former without the latter,
+    a warning is emitted and ``muted`` is forced.
+
+``:poster:``
+    Still image displayed before playback. Three modes:
+
+    - **Absent**: no poster, the ``<video>`` shows a black background.
+      The directive is also skipped on non-HTML builders.
+    - **Flag** (``:poster:`` with no value): an automatic screenshot of
+      the page is taken right after load, before interactions. Saved
+      next to the WebM and used as the ``poster`` attribute. Currently
+      only generated for HTML builds.
+    - **URL** (``:poster: ./image.png``): explicit URL of an image you
+      provide. Also used as fallback for non-HTML builders.
+
+``:caption:``
+    Optional ``<figcaption>`` text below the video.
+
+``:trim-start:``
+    Trim the beginning of the recording. Three modes:
+
+    - **Absent**: no trim. The video covers the full Playwright context
+      lifecycle, including the initial about:blank flash.
+    - **Flag** (``:trim-start:`` with no value): automatic. The extension
+      measures the time between context creation and the end of page load
+      and trims that prefix.
+    - **Seconds** (``:trim-start: 1.5``): trim that many seconds off the
+      front.
+
+    Requires ffmpeg. Playwright already bundles one (downloaded by
+    ``playwright install``); a system ffmpeg on PATH is also accepted.
+
+``:locator:``
+    Playwright selector. When set, the video is cropped to the bounding
+    box of the matched element, similarly to the screenshot directive's
+    ``:locator:``. Requires ffmpeg.
+
+    Limitation: the crop assumes the recorded video has the same
+    dimensions as the viewport. If you set ``:device-scale-factor:`` ≠ 1,
+    the crop coordinates may be off.
+
+Context builders and screencasts
+================================
+
+If you use :ref:`screenshot_contexts <screenshot_contexts>`, your builder must
+accept a ``record_video_dir`` parameter to be usable with ``screencast``:
+
+.. code-block:: python
+
+    def logged_as_user(browser, url, color_scheme, record_video_dir):
+        return browser.new_context(
+            color_scheme=color_scheme,
+            record_video_dir=record_video_dir,
+            storage_state="user.json",
+        )
+
+Builders that don't accept ``record_video_dir`` are still called with three
+arguments by ``screenshot`` (full backwards compatibility) but raise a build
+error when used with ``screencast``.
+
+Limitations
+===========
+
+- WebM only (Playwright's native video format). No mp4/h264, no audio.
+- HTML output only. Other builders fall back to ``:poster:`` if provided,
+  otherwise the directive is skipped.
+- The recording starts when the Playwright context is created, so the
+  first frames typically show a blank page before the load completes.
+  Use ``:trim-start:`` to skip them. This is a `known Playwright
+  limitation <https://github.com/microsoft/playwright/issues/27253>`__.
+- ``:trim-start:`` and ``:locator:`` require ffmpeg. Playwright already
+  bundles one as part of ``playwright install``; the extension uses it
+  automatically and falls back to a system ffmpeg if needed.
+
 Configuration
 #############
 
